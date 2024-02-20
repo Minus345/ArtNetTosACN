@@ -1,16 +1,33 @@
-# This is a sample Python script.
+import time
 
-# Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import sacn
+import stupidArtnet
+from stupidArtnet import StupidArtnetServer
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    def test_callback(data):
+        # the received data is an array
+        # of the channels value (no headers)
+        print('Received new data \n', data)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # a Server object initializes with the following data
+    # universe 			= DEFAULT 0
+    # subnet   			= DEFAULT 0
+    # net      			= DEFAULT 0
+    # setSimplified     = DEFAULT True
+    # callback_function = DEFAULT None
+
+    universe = 1
+    a = StupidArtnetServer()
+
+    # For every universe we would like to receive,
+    # add a new listener with a optional callback
+    # the return is an id for the listener
+    u1_listener = a.register_listener(
+        universe, callback_function=test_callback)
+
+    print(a)
+
+    time.sleep(100)
+
+
