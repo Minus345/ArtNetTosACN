@@ -1,14 +1,22 @@
 import time
 
 import sacn
-import stupidArtnet
 from stupidArtnet import StupidArtnetServer
 
 if __name__ == '__main__':
+
+    sender = sacn.sACNsender(source_name='sAcn Converter',
+                             fps=40,
+                             bind_address='192.168.178.131')
+    sender.start()
+
+    sender.activate_output(1)
+    sender[1].multicast = True
+    sender[1].priority = 50
+
     def test_callback(data):
-        # the received data is an array
-        # of the channels value (no headers)
-        print('Received new data \n', data)
+        #print('Received new data \n', data)
+        sender[1].dmx_data = data
 
     # a Server object initializes with the following data
     # universe 			= DEFAULT 0
