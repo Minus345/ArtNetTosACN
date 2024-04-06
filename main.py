@@ -4,9 +4,8 @@ import sacn
 from stupidArtnet import StupidArtnetServer
 
 if __name__ == '__main__':
-
     sender = sacn.sACNsender(source_name='sAcn Converter',
-                             fps=40,
+                             fps=30,
                              bind_address='192.168.178.131')
     sender.start()
 
@@ -14,9 +13,12 @@ if __name__ == '__main__':
     sender[1].multicast = True
     sender[1].priority = 50
 
+
     def test_callback(data):
-        #print('Received new data \n', data)
+        print('Received new data \n', data[0])
         sender[1].dmx_data = data
+        sender.flush()
+
 
     # a Server object initializes with the following data
     # universe 			= DEFAULT 0
@@ -28,14 +30,12 @@ if __name__ == '__main__':
     universe = 1
     a = StupidArtnetServer()
 
-    # For every universe we would like to receive,
-    # add a new listener with a optional callback
-    # the return is an id for the listener
+    # ArtNet input
     u1_listener = a.register_listener(
-        universe, callback_function=test_callback)
-
+        universe,  is_simplified=True) #callback_function=test_callback,
     print(a)
 
-    time.sleep(100)
-
-
+    while True:
+        sender[1].dmx_data = a.get_buffer(u1_listener)
+        #print(a.get_buffer(u1_listener))
+        sender.flush()
