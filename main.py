@@ -1,41 +1,45 @@
+import sys
 import time
 
 import sacn
 from stupidArtnet import StupidArtnetServer
 
 if __name__ == '__main__':
-    sender = sacn.sACNsender(source_name='sAcn Converter',
-                             fps=30,
-                             bind_address='192.168.178.131')
+
+    print(sys.argv)
+    senderIp = sys.argv.__getitem__(1)
+    print("Sender Ip:", senderIp)
+    maxUniverse = 1 + int(sys.argv.__getitem__(2))  # Universe Count -1 because I´m starting with universe 1 and not 0
+    print("Universes:", maxUniverse - 1, "From: 1 -", maxUniverse - 1)
+    debug = False
+    if len(sys.argv) > 3:
+        if sys.argv.__getitem__(3) is not None:
+            debug = True
+
+    sender = sacn.sACNsender(source_name='sAcn Converter', fps=30, bind_address=senderIp)
     sender.start()
 
-    sender.activate_output(1)
-    sender[1].multicast = True
-    sender[1].priority = 50
-
-
-    def test_callback(data):
-        print('Received new data \n', data[0])
-        sender[1].dmx_data = data
-        sender.flush()
-
-
-    # a Server object initializes with the following data
-    # universe 			= DEFAULT 0
-    # subnet   			= DEFAULT 0
-    # net      			= DEFAULT 0
-    # setSimplified     = DEFAULT True
-    # callback_function = DEFAULT None
-
-    universe = 1
-    a = StupidArtnetServer()
+    for x in range(1, maxUniverse):
+        sender.activate_output(x)
+        sender[x].multicast = True
+        sender[x].priority = 50
+        print("created Universe: ", x)
 
     # ArtNet input
-    u1_listener = a.register_listener(
-        universe,  is_simplified=True) #callback_function=test_callback,
-    print(a)
+    ArtNetServer = StupidArtnetServer()
+    artNetListeners = []
 
+    for x in range(1, maxUniverse):
+        print(x)
+        artNetListeners.append(ArtNetServer.register_listener(x, is_simplified=True))
+        print(ArtNetServer)
+
+    print(artNetListeners)
+
+    print("Start Sending sAcn")
     while True:
-        sender[1].dmx_data = a.get_buffer(u1_listener)
-        #print(a.get_buffer(u1_listener))
+        for x in range(1, maxUniverse):
+            sender[x].dmx_data = ArtNetServer.get_buffer(artNetListeners[x - 1])
+            if debug:
+                print("U:", x - 1, "Data:", ArtNetServer.get_buffer(artNetListeners[x - 1]))
         sender.flush()
